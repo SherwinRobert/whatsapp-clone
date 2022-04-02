@@ -5,10 +5,12 @@ import SubmitIcon from '../../Icon/SubmitIcon'
 import { useTopLevelContext } from '../../Hooks/useContextProvider'
 // import {msgUpload} from '../../api/getUserData'
 // import useUsersFromDatabase from '../../Hooks/useUsersFromDatabase'
-import { doc, setDoc , getDoc , onSnapshot,collection,limit,query } from "firebase/firestore"; 
+import { doc, setDoc , getDoc , onSnapshot,collection,limit,query, serverTimestamp } from "firebase/firestore"; 
 import db from '../../firebase-config'
 import { nanoid } from 'nanoid'
 import RightChatComponent from '../RightChatComponent/RightChatComponent'
+import LeftChatComponent from '../LeftChatComponent/LeftChatComponent'
+import { useAuth } from '../../Hooks/useAuth'
 // import { nanoid } from 'nanoid'
 
 // type TChatsDisplay = {
@@ -22,6 +24,7 @@ interface IMessages{
 
 const ChatsDisplay = () => {
     
+    const {user} = useAuth()
     const [message, setMessage] = useState<string>("")
     const { dispatch } = useTopLevelContext()
     const [messageList,setMessageList] = useState<IMessages[]>([])
@@ -39,7 +42,7 @@ const ChatsDisplay = () => {
 
     useEffect(() => {
 
-        const q = query(collection(db, "messages",state.chatId,"message"), limit(10));
+        const q = query(collection(db, "messages",state.chatId,"message"), limit(3));
         const unsub = onSnapshot(q, (doc: any) => {
             let messages:IMessages[] = []
             doc.forEach((d:any) => {
@@ -85,7 +88,8 @@ const ChatsDisplay = () => {
             await setDoc(doc(db, "messages", state.chatId ,"message", nanoid()),{
                 sender: state.senderId,
                 reciever: state.recieverId,
-                messageContent : message
+                messageContent: message,
+                timeStamp:serverTimestamp()
             });        
             dispatch({ type: "setNewChat", payload: state.chatId })
 
@@ -93,7 +97,8 @@ const ChatsDisplay = () => {
             await setDoc(doc(db,"messages",state.chatId,"message",nanoid()),{
                 sender: state.senderId,
                 reciever: state.recieverId,
-                messageContent : message
+                messageContent: message,
+                timeStamp:serverTimestamp()
             });
         }
     }
@@ -111,7 +116,7 @@ const ChatsDisplay = () => {
                 {
                     messageList.map((message: IMessages) => {
                         console.log(message)
-                        return <RightChatComponent key={nanoid()} messageContent={message.messageContent} />
+                        return message.sender === user.uid ? <RightChatComponent key={nanoid()} messageContent={message.messageContent} /> : <LeftChatComponent key={nanoid()} messageContent={message.messageContent} />
                     })
                 }
           </div>
