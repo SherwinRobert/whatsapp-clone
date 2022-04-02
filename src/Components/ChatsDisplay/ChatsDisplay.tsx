@@ -5,7 +5,7 @@ import SubmitIcon from '../../Icon/SubmitIcon'
 import { useTopLevelContext } from '../../Hooks/useContextProvider'
 // import {msgUpload} from '../../api/getUserData'
 // import useUsersFromDatabase from '../../Hooks/useUsersFromDatabase'
-import { doc, setDoc , getDoc , onSnapshot,collection,limit,query, serverTimestamp } from "firebase/firestore"; 
+import { doc, setDoc , getDoc , onSnapshot,collection,limit,query, serverTimestamp,orderBy } from "firebase/firestore"; 
 import db from '../../firebase-config'
 import { nanoid } from 'nanoid'
 import RightChatComponent from '../RightChatComponent/RightChatComponent'
@@ -42,7 +42,7 @@ const ChatsDisplay = () => {
 
     useEffect(() => {
 
-        const q = query(collection(db, "messages",state.chatId,"message"), limit(3));
+        const q = query(collection(db, "messages",state.chatId,"message"),orderBy("timeStamp", "desc"),limit(5));
         const unsub = onSnapshot(q, (doc: any) => {
             let messages:IMessages[] = []
             doc.forEach((d:any) => {
