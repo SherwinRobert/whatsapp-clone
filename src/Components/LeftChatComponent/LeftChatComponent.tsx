@@ -1,5 +1,3 @@
-import React from 'react'
-
 const LeftChatComponent = () => {
   return (
       <div className='rounded-b-lg rounded-tr-lg w-2/3 self-start bg-emerald-800 p-2 text-white'>
