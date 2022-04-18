@@ -4,7 +4,7 @@ interface IMessage{
 
 const RightChatComponent = ({ messageContent }:IMessage) => {
     return (
-      <div className='rounded-b-lg rounded-tl-lg w-2/3 self-end bg-emerald-800 p-2 text-white'>
+      <div className='rounded-b-lg rounded-tl-lg max-w-[66%] self-end bg-emerald-800 p-2 text-white'>
           <div className='flex flex-col'>
           <div>{messageContent}</div>
             <div className='self-end text-xs'>12.00 AM</div>

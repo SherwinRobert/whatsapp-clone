@@ -3,87 +3,83 @@ import profileDefault from '../../Images/profileDefault.png'
 import TripleDot from '../../Icon/TripleDot'
 import SubmitIcon from '../../Icon/SubmitIcon'
 import { useTopLevelContext } from '../../Hooks/useContextProvider'
-// import {msgUpload} from '../../api/getUserData'
-// import useUsersFromDatabase from '../../Hooks/useUsersFromDatabase'
-import { doc, setDoc , getDoc , onSnapshot,collection,limit,query, serverTimestamp,orderBy } from "firebase/firestore"; 
+import { doc, setDoc, serverTimestamp} from "firebase/firestore"; 
 import db from '../../firebase-config'
 import { nanoid } from 'nanoid'
 import RightChatComponent from '../RightChatComponent/RightChatComponent'
 import LeftChatComponent from '../LeftChatComponent/LeftChatComponent'
-import { useAuth } from '../../Hooks/useAuth'
-// import { nanoid } from 'nanoid'
+// import { useAuth } from '../../Hooks/useAuth'
+import { useMessages,IMessages } from '../../Hooks/useMessages'
 
-// type TChatsDisplay = {
-//     showPanel:boolean
-// }
-interface IMessages{
-    reciever: string
-    sender: string
-    messageContent:string
+
+interface IChatMeta{
+    chatId: string,
+    reciever: string,
+    recieverName:string
 }
 
 const ChatsDisplay = () => {
     
-    const {user} = useAuth()
+    // const {user} = useAuth()
     const [message, setMessage] = useState<string>("")
-    const { dispatch } = useTopLevelContext()
-    const [messageList,setMessageList] = useState<IMessages[]>([])
+    const { state, dispatch } = useTopLevelContext()
+    // const [messageList, setMessageList] = useState<IMessages[]>([])
+    const [messageList] = useMessages(state.chatId)
     
     const messageSetter = (e:React.FormEvent<HTMLInputElement>):void => {
         const { value } = e.currentTarget
         setMessage(value)
     }
 
-    const arrayObj = {
-        chatIds : []
-    }
+    // useEffect(() => {
 
-    const { state } = useTopLevelContext()
+    //     if (state.chatId) {
+    //         try {
+    //         const q = query(collection(db, "messages",state.chatId,"message"),orderBy("timeStamp", "desc"),limit(8));
+    //         const unsub = onSnapshot(q, (doc: any) => {
+    //         let messages:IMessages[] = []
+    //         doc.forEach((d:any) => {
+    //             console.log(d.data())
+    //             messages.push(d.data())
+    //         })
 
+    //         setMessageList(messages)
+    //         });
+            
+    //         return unsub;
+    //     } catch (error) {
+    //         console.log(error)
+    //     }
+    //     }
+        
+    // }, [state.chatId])
+    
     useEffect(() => {
-
-        const q = query(collection(db, "messages",state.chatId,"message"),orderBy("timeStamp", "desc"),limit(5));
-        const unsub = onSnapshot(q, (doc: any) => {
-            let messages:IMessages[] = []
-            doc.forEach((d:any) => {
-                console.log(d.data())
-                messages.push(d.data())
-            })
-
-            setMessageList(messages)
-        });
-
-        return unsub;
-
-    },[state.chatId])
+        console.log("the element is",state.ref?.current)
+    },[])
+  
     
     const uploadMsgToChat = async () => {
-        
         if (state.setNewChat) {
-            const senderRef = doc(db, "chats", state.senderId);
-            const recieverRef = doc(db, "chats", state.recieverId);
-
-            const senderChats = (await getDoc(senderRef)).data() || arrayObj
-            const recieverChats = (await getDoc(senderRef)).data() || arrayObj
-
-
-            console.log(senderChats, recieverChats)
-
-            console.log(senderChats.chatIds)
+            const chatId:string = nanoid()
+            const senderRef = doc(db, "chats", state.senderId,"chatIds",chatId);
+            const recieverRef = doc(db, "chats", state.recieverId,"chatIds",chatId);
             
-            let despObj = {
+            let chatObjSender:IChatMeta = {
                 chatId: state.chatId,
                 reciever: state.recieverId,
-                sender:state.senderId
+                recieverName:state.reciever
             }
-            await setDoc(senderRef, {
-                chatIds: [despObj,...senderChats.chatIds]
-            });
 
-            
-            await setDoc(recieverRef, {
-                chatIds: [despObj,...recieverChats.chatIds]
-            });
+            let chatObjReciever:IChatMeta = {
+                chatId: state.chatId,
+                reciever: state.senderId,
+                recieverName:state.userName || "UserName"
+            }
+
+            await setDoc(senderRef,chatObjSender);            
+            await setDoc(recieverRef, chatObjReciever);
+            console.log("chat has been posted")
 
             await setDoc(doc(db, "messages", state.chatId ,"message", nanoid()),{
                 sender: state.senderId,
@@ -91,7 +87,7 @@ const ChatsDisplay = () => {
                 messageContent: message,
                 timeStamp:serverTimestamp()
             });        
-            dispatch({ type: "setNewChat", payload: state.chatId })
+            dispatch({ type: 'disableNewChat', payload: "" })
 
         } else {
             await setDoc(doc(db,"messages",state.chatId,"message",nanoid()),{
@@ -104,7 +100,7 @@ const ChatsDisplay = () => {
     }
     
     return (
-      <div className='w-full h-full relative flex flex-col'>
+      <div ref={state.ref} className='w-full h-full flex flex-col'>
           <nav className='relative px-4 py-2 flex justify-between items-center z-20 bg-teal-900'>
               <div className='flex items-center'>
                   <img className='rounded-full w-12 mr-2' src={profileDefault} alt="" />
@@ -112,11 +108,11 @@ const ChatsDisplay = () => {
               </div>
               <TripleDot />
           </nav> 
-            <div className='relative h-4/5 w-full bg-slate-800 flex flex-col-reverse gap-y-2 px-4 pb-4 justify-start'>
+            <div className='relative h-4/5 w-full bg-slate-800 flex flex-col-reverse gap-y-2 p-4 justify-start overflow-y-auto'>
                 {
+                    messageList&&
                     messageList.map((message: IMessages) => {
-                        console.log(message)
-                        return message.sender === user.uid ? <RightChatComponent key={nanoid()} messageContent={message.messageContent} /> : <LeftChatComponent key={nanoid()} messageContent={message.messageContent} />
+                        return message.sender === state.senderId ? <RightChatComponent key={nanoid()} messageContent={message.messageContent} /> : <LeftChatComponent key={nanoid()} messageContent={message.messageContent} />
                     })
                 }
           </div>
@@ -124,8 +120,8 @@ const ChatsDisplay = () => {
               <input onChange={messageSetter} type="text" placeholder='Type a message' name='message' value={message} className='p-2 w-full rounded-md outline-none text-white bg-slate-600' />
                     <button onClick={(e) => {
                         e.preventDefault()
-                        // msgUpload(state.senderId,state.recieverId,message)
                         uploadMsgToChat()
+                        setMessage("")
                     }} className='m-2'><SubmitIcon /></button>
           </form>
       </div>

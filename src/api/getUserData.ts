@@ -1,22 +1,17 @@
-import { doc, getDoc,setDoc } from "firebase/firestore";
+import { doc, getDoc } from "firebase/firestore";
 import db from "../firebase-config";
 
 export const getSingleUser = async (id:string) => {
     const docRef = doc(db,"users",id)
     const docSnap = await getDoc(docRef);
-
+    let data:any;
     if (docSnap.exists()) {
         console.log("Document data:", docSnap.data());
-        return docSnap.data()
+        data = docSnap.data()
     } else {
         console.log("No such document!");
     }
+
+    return data
 }
 
-export const msgUpload = async(senderId:string,recieverId: string,textContent:string) => {
-    await setDoc(doc(db, "messages", senderId), {
-    recieverId: recieverId,
-    textContent: textContent
-});
-
-}

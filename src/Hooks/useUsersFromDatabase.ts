@@ -40,4 +40,4 @@ const useUsersFromDatabase = () => {
 
 }
 
-export default useUsersFromDatabase;
+export default useUsersFromDatabase

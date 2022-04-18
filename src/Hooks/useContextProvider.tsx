@@ -1,4 +1,4 @@
-import { createContext, useContext, useReducer } from "react";
+import { createContext, useContext, useEffect, useReducer, useRef } from "react";
 
 interface IChildren{
     children: React.ReactNode
@@ -10,7 +10,9 @@ interface InitalState{
     reciever: string
     chatId : string
     showPanel: boolean
-    setNewChat : boolean
+    setNewChat: boolean
+    userName: string
+    ref : React.RefObject<HTMLDivElement> | undefined
 }
 
 interface IAction{
@@ -25,18 +27,23 @@ interface IContext{
 
 const defaultDispatch: React.Dispatch<IAction> = () => {}
 
+let divRef;
+
 const intialState:InitalState = {
         senderId: "",
         recieverId: "",
         reciever: "",
         chatId: "",
         showPanel: true,
-        setNewChat : false
+        setNewChat: false,
+        userName: "",
+        ref: divRef
     }
 const Ctx = createContext<IContext>({
     state: intialState,
     dispatch : defaultDispatch
 })
+
 
 export const useTopLevelContext = () => {
     return useContext(Ctx)
@@ -44,6 +51,11 @@ export const useTopLevelContext = () => {
 
 const ContextProvider = ({ children }: IChildren) => {
 
+    divRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        console.log()
+    },[])
     const reducerFun = (prevState:InitalState, action:IAction):InitalState => {
         
         switch (action.type) {
@@ -64,15 +76,33 @@ const ContextProvider = ({ children }: IChildren) => {
                     ...prevState,
                     reciever:action.payload
                 }
-            case 'setNewChat':
+            case 'setChat':
                 console.log('setNewChat')
                 return {
                     ...prevState,
                     chatId : action.payload,
-                    setNewChat: false
+                    setNewChat:false
                 }
-            case 'setShowPanel':
-                break;
+            case 'setNewChat':
+                return {
+                    ...prevState,
+                    setNewChat:true
+                }
+            case 'disableNewChat':
+                return {
+                    ...prevState,
+                    setNewChat:true
+                }
+            case "togglePanel":
+                return {
+                    ...prevState,
+                    showPanel:false
+                }
+            case "setUserName":
+                return {
+                    ...prevState,
+                    userName:action.payload
+                }
             default:
                 console.log("no cases selected in use reducer")
                 break;

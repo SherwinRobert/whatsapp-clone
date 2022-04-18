@@ -8,19 +8,17 @@ import { useAuth } from "../../Hooks/useAuth";
 interface IFindPeople{
   setShowFindPeople: (arg: boolean) => void,
   users: IUsers[]
-  togglePanel:() => void
 }
 
-const FindPeopleComponent = (props:IFindPeople) => {
+const FindPeopleComponent = (props: IFindPeople) => {
+  
+  const {user} = useAuth()
+  const {dispatch} = useTopLevelContext()
 
     const hideFindPeople = ():void => {
         props.setShowFindPeople(false)
   }
 
-  const {user} = useAuth()
-
-  const {dispatch} = useTopLevelContext()
-  
   const setRecieverName = (id:string) => {
     
     let recieverName = props.users.filter(user => {
@@ -53,7 +51,7 @@ const FindPeopleComponent = (props:IFindPeople) => {
             return users.id !== user.uid
           })
             ?.map(user => {
-            return <UserInfoComponent setRecieverName={setRecieverName} togglePanel={props.togglePanel} key={nanoid()} {...user} />
+            return <UserInfoComponent setRecieverName={setRecieverName}  key={nanoid()} {...user} />
           })
         }
       </section>
